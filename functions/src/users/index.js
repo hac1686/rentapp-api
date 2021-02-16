@@ -38,6 +38,55 @@ exports.getUsers = (req, res) => {
   
 }
 
+exports.updateUser = (req, res) =>{
+
+  if (!db) {
+    admin.initializeApp({
+      credential: admin.credential.applicationDefault(),
+      databaseURL: 'https://rentapp-api-hc.firebaseio.com'
+    });
+    const db = admin.firestore()
+  }
+
+  const { userId } = req.params; //destructuring, like saying pull it out of request params
+ // const userId = req.params.userId //assigning directly
+  const userUpdates = req.body // { lastName: 'Frankenstein', age: 45}
+  db.collection('users').doc(userId).update(userUpdates)
+  .then(docRef => {
+    console.log('updated User', userId)
+    res.status(200).send('updates user ' + userId)
+  })
+  .catch (err => {
+    console.log('Error updating user ' + err);
+    res.status(500).send('Error updating user: ' + err);
+  })
+}
+
+
+
+exports.deleteUser = (req, res) =>{
+
+  if (!db) {
+    admin.initializeApp({
+      credential: admin.credential.applicationDefault(),
+      databaseURL: 'https://rentapp-api-hc.firebaseio.com'
+    });
+    const db = admin.firestore()
+  }
+
+  const { userId } = req.params; //destructuring, like saying pull it out of request params
+ // const userId = req.params.userId //assigning directly
+   db.collection('users').doc(userId).delete()
+  .then(docRef => {
+    console.log('Deleted User', userId)
+    res.status(200).send('deleted user ' + userId)
+  })
+  .catch (err => {
+    console.log('Error deleting user ' + err);
+    res.status(500).send('Error deleting user: ' + err);
+  })
+}
+
 
 //we want to connect this to the db
 exports.createUser = (req, res) => {
