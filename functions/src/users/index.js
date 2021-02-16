@@ -1,20 +1,65 @@
+const admin = require('firebase-admin')
+
+
+if (!admin.apps.length) {
+  admin.initializeApp({
+    credential: admin.credential.applicationDefault(),
+    databaseURL: 'https://rentapp-api-hc.firebaseio.com'
+  });
+}
+
+const db = admin.firestore()
+
+
 exports.getUsers = (req, res) => {
-    res.set('Cache-Control', 'public, max-age=300, s-maxage=600');
-    res.status(200).json([{
-      firstName: 'Todd',
-      lastName: 'Albert',
-      id: '08hf9eufbve',
-      email: 'todd@bocacode.com',
-    }, {
-      firstName: 'Michelle',
-      lastName: 'Bakels',
-      id: '089rhf98ehr',
-      email: 'michelle@bocacode.com',
-    }])
+
+  if (!db) {
+    admin.initializeApp({
+      credential: admin.credential.applicationDefault(),
+      databaseURL: 'https://rentapp-api-hc.firebaseio.com'
+    });
+    const db = admin.firestore()
   }
-  exports.createUser = (req, res) => {
-    // for now... let's send back the data we receive 
-    // TODO: save the data we get to a database
-    const newUser = req.body
-    res.status(200).send(newUser)
+  db.collection('users').get()
+    .then(snapshot =>{
+      const userResults = snapshot.docs.map(doc =>{
+        let singleUser = doc.data()
+        singleUser.id = doc.id 
+        return singleUser;
+      })
+      res.set('Cache-Control', 'public, max-age=300, s-maxage=600');//before we return the results let them be cacheable, smax is how long it can cache on the edge server
+      res.status(200).json(userResults);
+    })
+    .catch(err => {
+      console.log('Error retrieving users '+ err);
+      res.status(500).send('Error retrieving users '+ err);
+    })
+
+  
+}
+
+
+//we want to connect this to the db
+exports.createUser = (req, res) => {
+  if (!db) {
+    admin.initializeApp({
+      credential: admin.credential.applicationDefault(),
+      databaseURL: 'https://rentapp-api-hc.firebaseio.com'
+    });
+    const db = admin.firestore()
   }
+  // for now... let's send back the data we receive 
+  // TODO: save the data we get to a database
+
+  //check and see if the connection is still open, if not then reconnect
+  const newUser = req.body
+  db.collection('users').add(newUser)
+    .then(docRef => {
+      console.log('Created User', docRef.id)
+      res.status(200).send('Created user ' + docRef.id)
+    })
+    .catch (err => {
+      console.log('Error creating user ' + err);
+      res.status(500).send('Error creating user: ' + err);
+    })
+}

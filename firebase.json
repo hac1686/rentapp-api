@@ -2,7 +2,7 @@
   "hosting": {
     "public": "public",
     "rewrites":[{
-      "source":"**", //rewrite any requests that come in to our app function
+      "source":"**", //rewrite any requests that come in to our app function, send to the function exports.app in functions/index.js
       "function": "app"
     }],
     "ignore": [
